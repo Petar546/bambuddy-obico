@@ -135,3 +135,9 @@ To receive real-time failure alerts on your smartphone while outside your home n
    * Paste your copied link into the connection field.
    * **Crucial Step:** Replace the leading network prefix string from `https://` to **`discord://`** (e.g., `discord://discord.com/api/webhooks/...`).
    * Save and select **Test** to fire a verification message directly to your phone.
+
+
+---
+## .env setup
+
+OBICO_API_SECRET=<your-secret-here>
