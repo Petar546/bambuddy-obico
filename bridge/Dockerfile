@@ -2,7 +2,7 @@
 FROM docker.io/library/alpine:3.18 AS builder
 RUN apk add --no-cache build-base git go ffmpeg-dev
 WORKDIR /src
-RUN git clone https://github.com . && \
+RUN git clone https://github.com/AlexxIT/go2rtc.git . && \
     GOOS=linux go build -ldflags "-s -w" -o go2rtc
 
 FROM docker.io/library/alpine:3.18
