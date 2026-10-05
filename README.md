@@ -16,79 +16,42 @@ This guide walks you through setting up a completely local, cloud-free 3D print 
 ---
 
 ## Prerequisites
-* A host machine running Docker and Docker Compose (e.g., NixOS Desktop, Linux Server, or a Raspberry Pi 4/5 with 4GB+ RAM).
+* A host machine running Docker and Docker Compose (e.g. a Raspberry Pi 4/5 with 4GB+ RAM).
 * Your Bambu Lab printer's **IP Address**, **Serial Number**, and **LAN Access Code** (found on the printer's physical screen under **Settings > WLAN**).
 * A Discord account if you wish to configure out-of-home push notifications.
 
 ---
 
-## Step 1: Deploy the Docker Stack
 
-1. Create a project directory on your host machine and open your text editor:
-   ```bash
-   mkdir -p ~/bambuddy-ml && cd ~/bambuddy-ml
-   ```
+## configure your .env file
+1. Create a file in the root directory of this repository called '.env'
+2. run this command to create the file and write to it
 
-2. Create a `docker-compose.yml` file and paste the following non-root CPU-optimized layout:
-
-```yaml
-services:
-  # 1. The Bambuddy Core Server
-  bambuddy:
-    image: maziggy/bambuddy:latest
-    container_name: bambuddy
-    restart: unless-stopped
-    ports:
-      - "8000:8000"
-    environment:
-      - TZ=Europe/Berlin
-    volumes:
-      - ./bambuddy_data:/app/data
-      - ./bambuddy_logs:/app/logs
-    networks:
-      - print-net
-
-  # 2. Redis Caching Dependency (Required by the ML engine)
-  obico-redis:
-    image: redis:7.2-alpine
-    container_name: obico-redis
-    restart: unless-stopped
-    networks:
-      - print-net
-
-  # 3. The Local CPU-based Obico ML Server 
-  obico-ml-api:
-    image: ghcr.io/thespaghettidetective/obico-server/ml:0.1.0-release.1.4241
-    container_name: obico-ml-api
-    restart: unless-stopped
-    ports:
-      - "3334:3333"
-    environment:
-      - REDIS_URL=redis://obico-redis:6379
-      - ML_API_TOKEN=obico_api_secret
-      - TZ=Europe/Berlin
-    command: bash -c "gunicorn --bind 0.0.0.0:3333 --workers 1 wsgi"
-    networks:
-      - print-net
-
-networks:
-  print-net:
-    driver: bridge
+```bash
+echo "OBICO_API_SECRET=<your-secret-here>" > .env
 ```
+3. replace "<your-secret-here>" with your secret
 
-3. Launch the container stack:
+Your file should look like this ( remember to change your secret)
+
+```
+OBICO_API_SECRET=<your-secret-here>
+```
+## Launch and verify
+
+- Launch the container stack:
    ```bash
    docker compose up -d
    ```
 
-4. Verify all three services are actively running:
+- Verify all three services are actively running:
    ```bash
    docker ps -a
    ```
 
 ---
 
-## Step 2: Access the Dashboard & Add a Printer
+## Access the Dashboard & Add a Printer
 
 Because the containers run inside an isolated user-defined bridge network to support non-root configurations, automatic network scanning cannot intercept incoming printer broadcasts. You must pair the hardware manually.
 
@@ -104,7 +67,7 @@ Because the containers run inside an isolated user-defined bridge network to sup
 
 ---
 
-## Step 3: Configure AI Failure Detection
+## Configure AI Failure Detection
 
 Link the Bambuddy monitoring panel directly to your companion Obico engine over the internal bridge network.
 
@@ -122,7 +85,7 @@ Link the Bambuddy monitoring panel directly to your companion Obico engine over 
 
 ---
 
-## Step 4: Configure Remote Mobile Notifications
+## Configure Remote Mobile Notifications
 
 To receive real-time failure alerts on your smartphone while outside your home network without compromising security, use a Discord Webhook.
 
@@ -138,6 +101,4 @@ To receive real-time failure alerts on your smartphone while outside your home n
 
 
 ---
-## .env setup
 
-OBICO_API_SECRET=<your-secret-here>
