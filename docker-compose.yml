@@ -15,7 +15,7 @@ services:
       - BAMBU_PRINTER_IP=${BAMBU_PRINTER_IP}
       - BAMBU_ACCESS_CODE=${BAMBU_ACCESS_CODE}
     volumes:
-      - ./go2rtc.yaml:/config/go2rtc.yaml:z   # Native default configuration destination path context
+      - ./go2rtc.yaml:/config/go2rtc.yaml:z   # Explicitly mounts your config layout
     ports:
       - "1984:1984"
     deploy:
@@ -52,16 +52,13 @@ services:
     restart: unless-stopped
 
   # Core Machine Learning AI
-  # Core Machine Learning AI
   ml-api:
-    image: ghcr.io/gabe565/obico/ml-api:latest
+    image: ghcr.io/imagegenius/obico-darknet:latest
     container_name: obico_ml_api
     networks:
       - obico_net
     environment:
-      - PRODUCTION=true
       - REDIS_URL=redis://redis:6379/0
-      - OBICO_SERVER_URL=http://obico-web:8000   # FIX: Link the AI engine to the web backend container name
     ports:
       - "3333:5000"
     deploy:
