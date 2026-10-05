@@ -1,0 +1,59 @@
+version: '3.8'
+
+networks:
+  obico_net:
+    driver: bridge
+
+services:
+  # The Proxy Bridge container linking to your A2L
+  bambu-bridge:
+    build:
+      context: ./bridge
+      dockerfile: Dockerfile
+    container_name: bambu_obico_bridge
+    networks:
+      - obico_net
+    environment:
+      - BAMBU_PRINTER_IP=${BAMBU_PRINTER_IP}
+      - BAMBU_ACCESS_CODE=${BAMBU_ACCESS_CODE}
+    ports:
+      - "1984:1984"
+    restart: unless-stopped
+
+  # Pre-compiled Core Obico Web Server (Removes the need for local backend/ folder)
+  obico-web:
+    image: docker.io/ldiaz/obico-server:latest
+    container_name: obico_web_backend
+    networks:
+      - obico_net
+    ports:
+      - "3334:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.production
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: docker.io/library/redis:7-alpine
+    container_name: obico_redis
+    networks:
+      - obico_net
+
+  db:
+    image: docker.io/library/postgres:15-alpine
+    container_name: obico_postgres
+    networks:
+      - obico_net
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - obico_db_data:/var/lib/postgresql/data:Z
+
+volumes:
+  obico_db_data:
