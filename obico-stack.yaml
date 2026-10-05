@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: obico-pod
+spec:
+  containers:
+    # 1. The Video Compression Proxy
+    - name: bambu-bridge
+      image: docker.io/alexxit/go2rtc:master
+      envFrom:
+        - configMapRef:
+            name: obico-env-config    
+      volumeMounts:
+        - name: go2rtc-config
+          mountPath: /config/go2rtc.yaml
+      ports:
+        - containerPort: 1984
+          hostPort: 1984
+
+    # 2. Redis Cache Worker
+    - name: redis
+      image: docker.io/library/redis:7-alpine
+
+    # 3. PostgreSQL Storage Database
+    - name: db
+      image: docker.io/library/postgres:15-alpine
+      envFrom:
+        - configMapRef:
+            name: obico-env-config    
+      volumeMounts:
+        - name: db-data
+          mountPath: /var/lib/postgresql/data
+    # 4. Core Web Server Dashboard Portal
+    - name: obico-web
+      image: ghcr.io/gabe565/obico/web:latest
+      # Explicitly supply the script argument to Python so it boots the server instead of exiting
+      command: ["python3", "manage.py", "runserver", "0.0.0.0:8000"]
+      envFrom:
+        - configMapRef:
+            name: obico-env-config    
+      env:
+        - name: REDIS_URL
+          value: "redis://127.0.0.1:6379/0"
+        - name: ML_API_HOST
+          value: "http://127.0.0.1:5000"
+        - name: DATABASE_URL
+          value: "postgres://postgres:VolimPrintanje12!la@127.0.0.1:5432/obico_prod"
+        - name: ALLOWED_HOSTS
+          value: "*"
+        - name: INTERNAL_SITES
+          value: "localhost:3334,127.0.0.1:3334,localhost,127.0.0.1"
+        - name: SITE_ID
+          value: "1"
+        # --- FORCE BYPASS OF THE PRODUCTION STATIC MANIFEST LOOKUP CRASH ---
+        - name: DEBUG
+          value: "True"
+      ports:
+        - containerPort: 8000
+          hostPort: 3334
+        - containerPort: 5000
+          hostPort: 3333
+
+
+  volumes:
+    - name: go2rtc-config
+      hostPath:
+        path: ./go2rtc.yaml
+        type: File
+    - name: db-data
+      persistentVolumeClaim:
+        claimName: obico-db-vol
