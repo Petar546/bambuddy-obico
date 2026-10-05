@@ -1,20 +1,42 @@
 services:
-  # 1. The Bambuddy Core Server (Pulled from Docker Hub)
+  # 1. The Bambuddy Core Server
   bambuddy:
     image: maziggy/bambuddy:latest
     container_name: bambuddy
     restart: unless-stopped
-    network_mode: host 
+    ports:
+      - "8000:8000"
     environment:
       - TZ=Europe/Berlin
     volumes:
       - ./bambuddy_data:/app/data
       - ./bambuddy_logs:/app/logs
+    networks:
+      - print-net
 
-  # 2. The Local Obico ML Server (Pulled from a verified, pre-built GHCR repository)
+  # 2. Redis Caching Dependency (Required by the ML engine)
+  obico-redis:
+    image: redis:7.2-alpine
+    container_name: obico-redis
+    restart: unless-stopped
+    networks:
+      - print-net
+
+  # 3. The Local CPU Obico ML Server 
   obico-ml-api:
-    image: ghcr.io/gabe565/obico/ml-api:latest
+    image: ghcr.io/thespaghettidetective/obico-server/ml:0.1.0-release.1.4241
     container_name: obico-ml-api
     restart: unless-stopped
     ports:
-      - "3333:3333"
+      - "3334:3333"
+    environment:
+      - REDIS_URL=redis://obico-redis:6379
+      - ML_API_TOKEN=obico_api_secret
+      - TZ=Europe/Berlin
+    command: bash -c "gunicorn --bind 0.0.0.0:3333 --workers 1 wsgi"
+    networks:
+      - print-net
+
+networks:
+  print-net:
+    driver: bridge

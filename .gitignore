@@ -1,3 +1,5 @@
 .env
 obico.env
 env-stage.yaml
+bambuddy_data/
+bambuddy_logs/
