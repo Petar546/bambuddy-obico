@@ -1,19 +1,10 @@
 # syntax=docker/dockerfile:1
-FROM docker.io/library/alpine:3.18 AS builder
-RUN apk add --no-cache build-base git go ffmpeg-dev
-WORKDIR /src
-RUN git clone https://github.com/AlexxIT/go2rtc.git . && \
-    GOOS=linux go build -ldflags "-s -w" -o go2rtc
+FROM docker.io/alexxit/go2rtc:master
 
-FROM docker.io/library/alpine:3.18
-RUN apk add --no-cache ffmpeg ca-certificates tzdata
-WORKDIR /app
-COPY --from=builder /src/go2rtc /app/go2rtc
-RUN echo ' \
-streams: \
-  p1s: ffmpeg:rtsps://bblp:${BAMBU_ACCESS_CODE}@${BAMBU_PRINTER_IP}:8883/ams/stream.amv?bambu_tunnel \
-api: \
-  listen: ":1984" \
-' > /app/go2rtc.yaml
+# OPTIMIZATION: Write config using single-line string formatting
+RUN echo -e 'streams:\n  p1s: ffmpeg:rtsps://bblp:${BAMBU_ACCESS_CODE}@${BAMBU_PRINTER_IP}:8883/ams/stream.amv?bambu_tunnel#video=h264#raw=-vf scale=640:480,fps=5\napi:\n  listen: ":1984"' > /go2rtc.yaml
+
 EXPOSE 1984
-CMD ["/app/go2rtc", "-config", "/app/go2rtc.yaml"]
+
+# FIX: Point to the correct binary location at the root level
+CMD ["/go2rtc", "-config", "/go2rtc.yaml"]

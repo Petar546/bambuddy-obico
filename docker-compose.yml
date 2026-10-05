@@ -5,36 +5,70 @@ networks:
     driver: bridge
 
 services:
-  # The Proxy Bridge container linking to your A2L
+  # The Video Compression Proxy
   bambu-bridge:
-    build:
-      context: ./bridge
-      dockerfile: Dockerfile
+    image: docker.io/alexxit/go2rtc:master
     container_name: bambu_obico_bridge
     networks:
       - obico_net
     environment:
       - BAMBU_PRINTER_IP=${BAMBU_PRINTER_IP}
       - BAMBU_ACCESS_CODE=${BAMBU_ACCESS_CODE}
+    volumes:
+      - ./go2rtc.yaml:/config/go2rtc.yaml:z   # Native default configuration destination path context
     ports:
       - "1984:1984"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 150M
     restart: unless-stopped
 
-  # Pre-compiled Core Obico Web Server (Removes the need for local backend/ folder)
+  # Core Web Server Engine
   obico-web:
-    image: docker.io/ldiaz/obico-server:latest
+    image: ghcr.io/gabe565/obico/web:latest
     container_name: obico_web_backend
+    command: python3 manage.py runserver 0.0.0.0:8000
     networks:
       - obico_net
     ports:
       - "3334:8000"
     environment:
-      - DJANGO_SETTINGS_MODULE=config.settings.production
       - REDIS_URL=redis://redis:6379/0
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - ML_API_HOST=http://ml-api:5000
     depends_on:
       - db
       - redis
+      - ml-api
+    volumes:
+      - obico_web_data:/app/data:Z
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 800M
+    restart: unless-stopped
+
+  # Core Machine Learning AI
+  # Core Machine Learning AI
+  ml-api:
+    image: ghcr.io/gabe565/obico/ml-api:latest
+    container_name: obico_ml_api
+    networks:
+      - obico_net
+    environment:
+      - PRODUCTION=true
+      - REDIS_URL=redis://redis:6379/0
+      - OBICO_SERVER_URL=http://obico-web:8000   # FIX: Link the AI engine to the web backend container name
+    ports:
+      - "3333:5000"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 700M
     restart: unless-stopped
 
   redis:
@@ -42,6 +76,10 @@ services:
     container_name: obico_redis
     networks:
       - obico_net
+    deploy:
+      resources:
+        limits:
+          memory: 100M
 
   db:
     image: docker.io/library/postgres:15-alpine
@@ -54,6 +92,12 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - obico_db_data:/var/lib/postgresql/data:Z
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 250M
 
 volumes:
   obico_db_data:
+  obico_web_data:
