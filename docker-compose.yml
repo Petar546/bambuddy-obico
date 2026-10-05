@@ -1,0 +1,20 @@
+services:
+  # 1. The Bambuddy Core Server (Pulled from Docker Hub)
+  bambuddy:
+    image: maziggy/bambuddy:latest
+    container_name: bambuddy
+    restart: unless-stopped
+    network_mode: host 
+    environment:
+      - TZ=Europe/Berlin
+    volumes:
+      - ./bambuddy_data:/app/data
+      - ./bambuddy_logs:/app/logs
+
+  # 2. The Local Obico ML Server (Pulled from a verified, pre-built GHCR repository)
+  obico-ml-api:
+    image: ghcr.io/gabe565/obico/ml-api:latest
+    container_name: obico-ml-api
+    restart: unless-stopped
+    ports:
+      - "3333:3333"
