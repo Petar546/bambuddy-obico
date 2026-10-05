@@ -24,3 +24,9 @@ podman exec -it obico-pod-obico-web python3 manage.py initialize_site
 # 3. Clear the internal application cache so Django picks up the new database entries
 podman exec -it obico-pod-obico-web python3 manage.py clear_cache
 ```
+
+
+run this to open interactive user cretion wizard
+```
+podman exec -it obico-pod-obico-web python3 manage.py createsuperuser
+```
