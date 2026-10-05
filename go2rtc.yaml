@@ -1,4 +1,0 @@
-streams:
-  p1s: rtsps://bblp:${BAMBU_ACCESS_CODE}@${BAMBU_PRINTER_IP}:322/streaming/live/1
-api:
-  listen: ":1984"

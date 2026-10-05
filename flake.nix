@@ -21,14 +21,10 @@
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             podman
-            podman-compose
-            git
           ];
 
           shellHook = ''
-            echo "Available commands:"
-            echo "  - podman play kube obico-stack.yaml --configmap obico.env   (Start stack)"
-            echo "  - podman pod rm -f obico-pod                                (Stop stack)"
+            echo "IN nix dev env - podman available"
           '';
         };
       }
