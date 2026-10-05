@@ -1,17 +1,6 @@
-to run
-```sh
-    docker compose up -d
-```
+# Bambuddy And Obico AI Failure Detection Setup Guide
 
-to compose down:
-```sh
-docker compose down
-```
-
-
-# Standalone Bambuddy & Obico AI Failure Detection Setup Guide
-
-This guide walks you through setting up a completely local, cloud-free 3D print failure detection system for your Bambu Lab printer using **Bambuddy** and a self-hosted **Obico ML API** container. This environment runs inside a Rootless (non-root) Docker setup without requiring Home Assistant.
+Set up a local, 3D print failure detection system for Bambu Lab printer using **Bambuddy** and a self-hosted **Obico ML API** container. Runs inside a Rootless Docker setup without requiring Home Assistant.
 
 ---
 
