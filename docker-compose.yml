@@ -14,7 +14,7 @@ services:
     networks:
       - print-net
 
-  # 2. Redis Caching Dependency (Required by the ML engine)
+  # 2. Redis Caching Dependency
   obico-redis:
     image: redis:7.2-alpine
     container_name: obico-redis
@@ -22,9 +22,10 @@ services:
     networks:
       - print-net
 
-  # 3. The Local CPU Obico ML Server (ARM64 Compatible)
+  # 3. The Local CPU Obico ML Server
   obico-ml-api:
     image: ghcr.io/gabe565/obico/ml-api:latest
+    platform: linux/arm64  # <--- ADD THIS LINE HERE TO FIX THE MANIFEST ERROR
     container_name: obico-ml-api
     restart: unless-stopped
     ports:
