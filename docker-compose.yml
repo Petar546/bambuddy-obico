@@ -24,8 +24,8 @@ services:
 
   # 3. The Local CPU Obico ML Server
   obico-ml-api:
-    image: ghcr.io/gabe565/obico/ml-api:latest
-    platform: linux/arm64  # <--- ADD THIS LINE HERE TO FIX THE MANIFEST ERROR
+    image: ${OBICO_ML_IMAGE:-ghcr.io/thespaghettidetective/obico-server/ml:0.1.0-release.1.4241}
+    platform: ${TARGET_PLATFORM:-linux/amd64}  # <-- Dynamic platform default
     container_name: obico-ml-api
     restart: unless-stopped
     ports:
