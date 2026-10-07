@@ -14,7 +14,7 @@ services:
     networks:
       - print-net
 
-  # 2. Redis Caching Dependency (Required by the ML engine)
+  # 2. Redis Caching Dependency
   obico-redis:
     image: redis:7.2-alpine
     container_name: obico-redis
@@ -24,7 +24,8 @@ services:
 
   # 3. The Local CPU Obico ML Server
   obico-ml-api:
-    image: ghcr.io/thespaghettidetective/obico-server/ml:0.1.0-release.1.4241
+    image: ${OBICO_ML_IMAGE:-ghcr.io/thespaghettidetective/obico-server/ml:0.1.0-release.1.4241}
+    platform: ${TARGET_PLATFORM:-linux/amd64}  # <-- Dynamic platform default
     container_name: obico-ml-api
     restart: unless-stopped
     ports:

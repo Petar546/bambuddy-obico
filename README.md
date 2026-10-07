@@ -11,6 +11,13 @@ Set up a local, 3D print failure detection system for Bambu Lab printer using **
 
 ---
 
+## ------------------------------ RUNNING ON RASPBRY PI ------------------------------
+
+if docker is for some reason stuck on the 32bit version
+
+```bash
+DOCKER_DEFAULT_PLATFORM=linux/arm64 docker compose up -d
+```
 
 ## configure your .env file
 1. Create a file in the root directory of this repository called '.env'
@@ -26,6 +33,14 @@ Your file should look like this ( remember to change your secret)
 ```
 OBICO_API_SECRET=<your-secret-here>
 ```
+
+# EXAMPLE .env ( for raspi)
+```
+OBICO_API_SECRET=<your-secret-here>
+OBICO_ML_IMAGE=ghcr.io/gabe565/obico/ml-api:latest
+TARGET_PLATFORM=linux/arm64
+```
+
 ## Launch and verify
 
 - Launch the container stack:
