@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bambuddy-pod
+  labels:
+    app: bambuddy-application
+spec:
+  restartPolicy: Always
+  containers:
+    # 1. The Bambuddy Core Server
+    - name: bambuddy
+      image: maziggy/bambuddy:latest
+      ports:
+        - containerPort: 8000
+          hostPort: 8000
+      env:
+        - name: TZ
+          value: Europe/Berlin
+      volumeMounts:
+        - name: bambuddy-data
+          mountPath: /app/data
+        - name: bambuddy-logs
+          mountPath: /app/logs
+
+    # 2. Redis Caching Dependency
+    - name: obico-redis
+      image: redis:7.2-alpine
+
+    # 3. The Local CPU Obico ML Server
+    - name: obico-ml-api
+      image: ghcr.io/thespaghettidetective/obico-server/ml:0.1.0-release.1.4241
+      ports:
+        - containerPort: 3333
+          hostPort: 3334
+      env:
+        - name: REDIS_URL
+          value: redis://127.0.0.1:6379
+        - name: ML_API_TOKEN
+          value: "YOUR_OBICO_API_SECRET_HERE" # Replace with your secret or environment value
+        - name: TZ
+          value: Europe/Berlin
+      command: ["bash", "-c", "gunicorn --bind 0.0.0.0:3333 --workers 1 wsgi"]
+
+  # Shared Volumes Configured at Pod-Level
+  volumes:
+    - name: bambuddy-data
+      hostPath:
+        path: ./bambuddy_data
+        type: DirectoryOrCreate
+    - name: bambuddy-logs
+      hostPath:
+        path: ./bambuddy_logs
+        type: DirectoryOrCreate
+
